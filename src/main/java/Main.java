@@ -6,7 +6,6 @@ import java.net.Socket;
 public class Main {
   public static void main(String[] args){
     ServerSocket serverSocket = null;
-    Socket clientSocket = null;
     int port = 6379;
     try {
       serverSocket = new ServerSocket(port);
@@ -14,8 +13,19 @@ public class Main {
       // ensures that we don't run into 'Address already in use' errors
       serverSocket.setReuseAddress(true);
       // Wait for connection from client.
-      clientSocket = serverSocket.accept();
-      while (!clientSocket.isClosed()) {
+      while(true){
+        Socket clientSocket = serverSocket.accept();
+        Thread thread = new Thread(() -> {clientSocketHandler(clientSocket);});
+        thread.start();
+        }
+    } catch (IOException e) {
+      System.out.println("IOException: " + e.getMessage());
+    }
+  }
+
+  public static void clientSocketHandler(Socket clientSocket){
+    try {
+      while (clientSocket.isConnected()) {
         OutputStream outputStream = clientSocket.getOutputStream();
         outputStream.write("+PONG\r\n".getBytes());
       }
